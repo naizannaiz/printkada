@@ -8,6 +8,7 @@ import SuccessPage from "./pages/SuccessPage";
 import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
 import PrintQueue from "./pages/PrintQueue";
+import CheckStatus from "./pages/CheckStatus";
 import { PriceProvider } from "./context/PriceContext";
 import { ShopStatusProvider } from "./context/ShopStatusContext";
 
@@ -43,6 +44,7 @@ function App() {
                 <PrintQueue />
               </PrivateRoute>
             } />
+            <Route path="/check-status" element={<CheckStatus />} />
           </Routes>
         </Router>
       </ShopStatusProvider>

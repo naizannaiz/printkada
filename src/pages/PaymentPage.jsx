@@ -24,6 +24,7 @@ const PaymentPage = () => {
     const token = generateToken();
 
     sessionStorage.setItem("printToken", token);
+    localStorage.setItem("printToken", token); // <-- Add this line
 
     const printRequestId = sessionStorage.getItem("printRequestId");
     if (printRequestId) {

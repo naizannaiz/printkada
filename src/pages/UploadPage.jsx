@@ -4,7 +4,7 @@ import PageCounter from "../components/PageCounter";
 import { useShopStatus } from "../context/ShopStatusContext";
 import { storage, db } from "../firebase";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { collection, addDoc, Timestamp } from "firebase/firestore";
+import { collection, addDoc, Timestamp, query, where, getDocs } from "firebase/firestore";
 
 const UploadPage = () => {
   const [pageCount, setPageCount] = useState(0);
@@ -13,12 +13,36 @@ const UploadPage = () => {
   const [sideType, setSideType] = useState("");
   const [showWarning, setShowWarning] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [prevToken, setPrevToken] = useState(localStorage.getItem("printToken") || "");
+  const [prevStatus, setPrevStatus] = useState("");
+  const [prevDetails, setPrevDetails] = useState(null);
+  const [statusLoading, setStatusLoading] = useState(false);
   const navigate = useNavigate();
   const { status } = useShopStatus();
 
   useEffect(() => {
     sessionStorage.removeItem("printToken");
   }, []);
+
+  // Fetch previous token status
+  useEffect(() => {
+    const fetchPrevStatus = async () => {
+      if (!prevToken) return;
+      setStatusLoading(true);
+      const q = query(collection(db, "printRequests"), where("token", "==", prevToken));
+      const snap = await getDocs(q);
+      if (!snap.empty) {
+        const docData = snap.docs[0].data();
+        setPrevStatus(docData.status);
+        setPrevDetails(docData);
+      } else {
+        setPrevStatus("not found");
+        setPrevDetails(null);
+      }
+      setStatusLoading(false);
+    };
+    fetchPrevStatus();
+  }, [prevToken]);
 
   // Modified PageCounter handler to support loading
   const handlePageCount = async (count, selectedFile, isLoading = false) => {
@@ -61,7 +85,7 @@ const UploadPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-blue-200 relative">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-blue-50 to-blue-200 relative">
       {/* Admin Icon Button */}
       <div className="absolute top-6 right-8">
         <button
@@ -91,7 +115,8 @@ const UploadPage = () => {
           </svg>
         </button>
       </div>
-      <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md">
+      {/* Main Upload Card */}
+      <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md z-10">
         <h2 className="text-3xl font-bold text-blue-700 mb-6 text-center">
           Upload PDF Document
         </h2>
@@ -240,6 +265,55 @@ const UploadPage = () => {
           {loading ? "Processing..." : "Proceed to Payment"}
         </button>
       </div>
+
+      {/* Previous Token Status Section - subtle and below */}
+      {prevToken && (
+        <div className="mt-8 w-full max-w-md bg-gray-100 border border-gray-200 rounded-lg p-4 text-sm text-gray-700 shadow-sm">
+          <h3 className="font-semibold text-gray-600 mb-2">
+            Your Last Print Token
+          </h3>
+          {statusLoading ? (
+            <div>Loading status...</div>
+          ) : prevStatus === "not found" ? (
+            <div className="text-red-500">
+              No print request found for token <b>{prevToken}</b>.
+            </div>
+          ) : (
+            <div>
+              <div className="mb-1">
+                <b>Token:</b>{" "}
+                <span className="text-blue-700 font-bold">{prevToken}</span>
+              </div>
+              <div className="mb-1">
+                <b>Status:</b>{" "}
+                <span className="capitalize">{prevStatus}</span>
+              </div>
+              {prevDetails && (
+                <>
+                  <div className="mb-1">
+                    <b>Pages:</b> {prevDetails.pageCount}
+                  </div>
+                  <div className="mb-1">
+                    <b>Color Type:</b> {prevDetails.colorType}
+                  </div>
+                  <div className="mb-1">
+                    <b>Side Type:</b> {prevDetails.sideType}
+                  </div>
+                  <div className="mb-1">
+                    <b>Uploaded:</b>{" "}
+                    {prevDetails.createdAt?.toDate?.().toLocaleString?.()}
+                  </div>
+                </>
+              )}
+              {prevStatus === "printed" && (
+                <div className="text-green-600 mt-2 font-bold">
+                  Your document is printed and ready for collection!
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };
