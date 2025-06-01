@@ -1,11 +1,13 @@
 import React, { useState } from "react";
 import { usePrice } from "../context/PriceContext";
 import { useShopStatus } from "../context/ShopStatusContext";
+import { useNavigate } from "react-router-dom";
 
 const AdminDashboard = () => {
   const { pricePerPage, setPricePerPage } = usePrice();
   const [input, setInput] = useState(pricePerPage);
   const { status, setStatus } = useShopStatus();
+  const navigate = useNavigate();
 
   const handleChange = (e) => setInput(e.target.value);
   const handleSave = () => setPricePerPage(Number(input));
@@ -32,6 +34,14 @@ const AdminDashboard = () => {
         </div>
         <p className="mb-6">Current Price Per Page: <span className="font-semibold">₹{pricePerPage}</span></p>
         <StatusUpdater status={status} setStatus={setStatus} />
+        <div className="mt-4">
+          <button
+            onClick={() => navigate("/print-queue")}
+            className="w-full px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+          >
+            Go to Print Queue
+          </button>
+        </div>
       </div>
     </div>
   );

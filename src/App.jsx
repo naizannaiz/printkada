@@ -7,6 +7,7 @@ import PaymentPage from "./pages/PaymentPage";
 import SuccessPage from "./pages/SuccessPage";
 import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
+import PrintQueue from "./pages/PrintQueue";
 import { PriceProvider } from "./context/PriceContext";
 import { ShopStatusProvider } from "./context/ShopStatusContext";
 
@@ -35,6 +36,11 @@ function App() {
             <Route path="/admin-dashboard" element={
               <PrivateRoute>
                 <AdminDashboard />
+              </PrivateRoute>
+            } />
+            <Route path="/print-queue" element={
+              <PrivateRoute>
+                <PrintQueue />
               </PrivateRoute>
             } />
           </Routes>
