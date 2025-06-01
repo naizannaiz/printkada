@@ -3,6 +3,12 @@ import { useLocation, useNavigate } from "react-router-dom";
 import PaymentQR from "../components/PaymentQR";
 import TokenGenerator from "../components/TokenGenerator";
 import { usePrice } from "../context/PriceContext";
+import { getStorage } from "firebase/storage";
+import app from "../firebase"; // Adjust the import based on your file structure
+import { db } from "../firebase";
+import { doc, updateDoc } from "firebase/firestore";
+
+export const storage = getStorage(app);
 
 const PaymentPage = () => {
   const [paymentSuccess, setPaymentSuccess] = useState(false);
@@ -13,9 +19,35 @@ const PaymentPage = () => {
   const pageCount = location.state?.pageCount || 1;
   const total = pageCount * pricePerPage;
 
-  const handlePaymentSuccess = () => {
+  const handlePaymentSuccess = async () => {
+    const paymentId = generatePaymentId();
+    const token = generateToken();
+
+    sessionStorage.setItem("printToken", token);
+
+    const printRequestId = sessionStorage.getItem("printRequestId");
+    if (printRequestId) {
+      await updateDoc(doc(db, "printRequests", printRequestId), {
+        paymentId,
+        token,
+        status: "paid"
+      });
+    } else {
+      alert("No print request found. Please start from the upload page.");
+      return;
+    }
+
     setPaymentSuccess(true);
+    setToken(token);
     navigate('/success');
+  };
+
+  const generatePaymentId = () => "PAY" + Math.floor(100000 + Math.random() * 900000);
+
+  const generateToken = () => {
+    const letter = String.fromCharCode(65 + Math.floor(Math.random() * 26));
+    const digits = Math.floor(Math.random() * 100).toString().padStart(2, "0");
+    return `${letter}${digits}`;
   };
 
   return (

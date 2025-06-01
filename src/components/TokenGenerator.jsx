@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 const TokenGenerator = ({ paymentSuccess }) => {
   const [token, setToken] = useState("");
@@ -6,13 +6,17 @@ const TokenGenerator = ({ paymentSuccess }) => {
   const generateToken = () => {
     const letter = String.fromCharCode(65 + Math.floor(Math.random() * 26)); // A-Z
     const digits = Math.floor(Math.random() * 100).toString().padStart(2, "0"); // 00-99
-    const newToken = `${letter}${digits}`;
-    setToken(newToken);
+    return `${letter}${digits}`;
   };
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (paymentSuccess) {
-      generateToken();
+      let storedToken = sessionStorage.getItem("printToken");
+      if (!storedToken) {
+        storedToken = generateToken();
+        sessionStorage.setItem("printToken", storedToken);
+      }
+      setToken(storedToken);
     }
   }, [paymentSuccess]);
 

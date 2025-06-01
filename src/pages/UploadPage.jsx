@@ -1,7 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import PageCounter from "../components/PageCounter";
 import { useShopStatus } from "../context/ShopStatusContext";
+import { storage, db } from "../firebase";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { collection, addDoc, Timestamp } from "firebase/firestore";
 
 const UploadPage = () => {
   const [pageCount, setPageCount] = useState(0);
@@ -13,6 +16,10 @@ const UploadPage = () => {
   const navigate = useNavigate();
   const { status } = useShopStatus();
 
+  useEffect(() => {
+    sessionStorage.removeItem("printToken");
+  }, []);
+
   // Modified PageCounter handler to support loading
   const handlePageCount = async (count, selectedFile, isLoading = false) => {
     setLoading(isLoading);
@@ -21,10 +28,33 @@ const UploadPage = () => {
     if (!isLoading) setLoading(false);
   };
 
-  const handleProceedToPayment = () => {
+  const handleProceedToPayment = async () => {
     if (status === "closed") return;
-    if (pageCount > 0 && colorType && sideType) {
-      navigate("/payment", { state: { pageCount, colorType, sideType } });
+    if (pageCount > 0 && colorType && sideType && file) {
+      setLoading(true);
+      try {
+        // 1. Upload PDF to Firebase Storage
+        const storageRef = ref(storage, `pdfs/${Date.now()}_${file.name}`);
+        await uploadBytes(storageRef, file);
+        const pdfUrl = await getDownloadURL(storageRef);
+
+        // 2. Create Firestore document with status "pending"
+        const docRef = await addDoc(collection(db, "printRequests"), {
+          pageCount,
+          colorType,
+          sideType,
+          pdfUrl,
+          createdAt: Timestamp.now(),
+          status: "pending",
+        });
+
+        sessionStorage.setItem("printRequestId", docRef.id);
+        setLoading(false);
+        navigate("/payment", { state: { pageCount, colorType, sideType } });
+      } catch (error) {
+        setLoading(false);
+        setShowWarning(true);
+      }
     } else {
       setShowWarning(true);
     }
@@ -39,16 +69,38 @@ const UploadPage = () => {
           className="bg-white p-2 rounded-full shadow hover:bg-blue-100 transition"
           title="Admin Login"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 text-blue-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5.121 17.804A9 9 0 1112 21a9 9 0 01-6.879-3.196z" />
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-7 w-7 text-blue-700"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M5.121 17.804A9 9 0 1112 21a9 9 0 01-6.879-3.196z"
+            />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+            />
           </svg>
         </button>
       </div>
       <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md">
-        <h2 className="text-3xl font-bold text-blue-700 mb-6 text-center">Upload PDF Document</h2>
+        <h2 className="text-3xl font-bold text-blue-700 mb-6 text-center">
+          Upload PDF Document
+        </h2>
         {/* Status Display */}
-        <div className={`mb-4 text-center font-semibold ${status === "open" ? "text-green-700" : "text-red-700"}`}>
+        <div
+          className={`mb-4 text-center font-semibold ${
+            status === "open" ? "text-green-700" : "text-red-700"
+          }`}
+        >
           Print Shop is {status === "open" ? "Open" : "Closed"}
         </div>
         {status === "closed" && (
@@ -60,11 +112,28 @@ const UploadPage = () => {
         {/* Loading Spinner */}
         {loading && (
           <div className="flex justify-center items-center my-4">
-            <svg className="animate-spin h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+            <svg
+              className="animate-spin h-6 w-6 text-blue-600"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                className="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+              ></circle>
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8v8z"
+              ></path>
             </svg>
-            <span className="ml-2 text-blue-600 font-semibold">Processing PDF...</span>
+            <span className="ml-2 text-blue-600 font-semibold">
+              Processing PDF...
+            </span>
           </div>
         )}
 
@@ -75,7 +144,9 @@ const UploadPage = () => {
 
         {/* Color or Black & White */}
         <div className="mt-6">
-          <label className="block text-gray-700 font-semibold mb-2">Print Type:</label>
+          <label className="block text-gray-700 font-semibold mb-2">
+            Print Type:
+          </label>
           <div className="flex gap-4">
             <label className="flex items-center">
               <input
@@ -106,7 +177,9 @@ const UploadPage = () => {
 
         {/* Single or Double Side */}
         <div className="mt-6">
-          <label className="block text-gray-700 font-semibold mb-2">Print Side:</label>
+          <label className="block text-gray-700 font-semibold mb-2">
+            Print Side:
+          </label>
           <div className="flex gap-4">
             <label className="flex items-center">
               <input
@@ -147,9 +220,19 @@ const UploadPage = () => {
         )}
         <button
           onClick={handleProceedToPayment}
-          disabled={loading || status === "closed" || pageCount === 0 || !colorType || !sideType}
+          disabled={
+            loading ||
+            status === "closed" ||
+            pageCount === 0 ||
+            !colorType ||
+            !sideType
+          }
           className={`mt-6 w-full py-2 px-4 rounded-lg font-semibold transition ${
-            loading || status === "closed" || pageCount === 0 || !colorType || !sideType
+            loading ||
+            status === "closed" ||
+            pageCount === 0 ||
+            !colorType ||
+            !sideType
               ? "bg-gray-400 text-gray-200 cursor-not-allowed"
               : "bg-blue-600 text-white hover:bg-blue-700"
           }`}
