@@ -29,6 +29,10 @@ const PaymentPage = () => {
     sessionStorage.setItem("printToken", token);
     localStorage.setItem("printToken", token);
 
+    const tokens = JSON.parse(localStorage.getItem("printTokens") || "[]");
+    tokens.push({ token, createdAt: Date.now() });
+    localStorage.setItem("printTokens", JSON.stringify(tokens));
+
     const printRequestId = sessionStorage.getItem("printRequestId");
     if (printRequestId) {
       await updateDoc(doc(db, "printRequests", printRequestId), {

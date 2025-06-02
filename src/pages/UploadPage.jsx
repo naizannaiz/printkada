@@ -5,7 +5,7 @@ import { useShopStatus } from "../context/ShopStatusContext";
 import { storage, db } from "../firebase";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { collection, addDoc, Timestamp, query, where, getDocs } from "firebase/firestore";
-import PrintTokenStatusCard from "../components/PrintTokenStatusCard"; // Import the new component
+import PrintTokenStatusCard from "../components/PrintTokenStatusCard";
 
 const UploadPage = () => {
   const [pageCount, setPageCount] = useState(0);
@@ -17,6 +17,8 @@ const UploadPage = () => {
   const [prevToken, setPrevToken] = useState(localStorage.getItem("printToken") || "");
   const [prevStatus, setPrevStatus] = useState("");
   const [prevDetails, setPrevDetails] = useState(null);
+  const [recentTokens, setRecentTokens] = useState([]);
+  const [recentStatuses, setRecentStatuses] = useState([]);
   const [statusLoading, setStatusLoading] = useState(false);
   const navigate = useNavigate();
   const { status } = useShopStatus();
@@ -24,6 +26,38 @@ const UploadPage = () => {
   useEffect(() => {
     sessionStorage.removeItem("printToken");
   }, []);
+
+  // Fetch all tokens from localStorage for last 2 days
+  useEffect(() => {
+    const tokens = JSON.parse(localStorage.getItem("printTokens") || "[]");
+    const twoDaysAgo = Date.now() - 2 * 24 * 60 * 60 * 1000;
+    const recent = tokens.filter(t => t.createdAt > twoDaysAgo);
+    setRecentTokens(recent);
+  }, []);
+
+  // Fetch statuses for all recent tokens
+  useEffect(() => {
+    const fetchStatuses = async () => {
+      setStatusLoading(true);
+      const statuses = [];
+      for (const t of recentTokens) {
+        const q = query(collection(db, "printRequests"), where("token", "==", t.token));
+        const snap = await getDocs(q);
+        if (!snap.empty) {
+          const docData = snap.docs[0].data();
+          statuses.push({
+            token: t.token,
+            status: docData.status,
+            details: docData,
+          });
+        }
+      }
+      setRecentStatuses(statuses);
+      setStatusLoading(false);
+    };
+    if (recentTokens.length > 0) fetchStatuses();
+    else setRecentStatuses([]);
+  }, [recentTokens]);
 
   // Fetch previous token status
   useEffect(() => {
@@ -267,11 +301,20 @@ const UploadPage = () => {
         </button>
       </div>
 
-      {/* Previous Token Status Section - subtle and below */}
-      <div className="flex flex-col items-center w-full">
-        {prevToken && (
-          <PrintTokenStatusCard details={prevDetails} status={prevStatus} token={prevToken} />
+      {/* All Recent Token Statuses Section */}
+      <div className="flex flex-col items-center w-full mt-8">
+        {statusLoading && <div>Loading your recent tokens...</div>}
+        {!statusLoading && recentStatuses.length === 0 && (
+          <div className="text-gray-400">No print requests in the last 2 days.</div>
         )}
+        {recentStatuses.map(({ token, status, details }) => (
+          <PrintTokenStatusCard
+            key={token}
+            token={token}
+            status={status}
+            details={details}
+          />
+        ))}
       </div>
     </div>
   );
