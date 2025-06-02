@@ -5,6 +5,7 @@ import { useShopStatus } from "../context/ShopStatusContext";
 import { storage, db } from "../firebase";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { collection, addDoc, Timestamp, query, where, getDocs } from "firebase/firestore";
+import PrintTokenStatusCard from "../components/PrintTokenStatusCard"; // Import the new component
 
 const UploadPage = () => {
   const [pageCount, setPageCount] = useState(0);
@@ -267,53 +268,11 @@ const UploadPage = () => {
       </div>
 
       {/* Previous Token Status Section - subtle and below */}
-      {prevToken && (
-        <div className="mt-8 w-full max-w-md bg-gray-100 border border-gray-200 rounded-lg p-4 text-sm text-gray-700 shadow-sm">
-          <h3 className="font-semibold text-gray-600 mb-2">
-            Your Last Print Token
-          </h3>
-          {statusLoading ? (
-            <div>Loading status...</div>
-          ) : prevStatus === "not found" ? (
-            <div className="text-red-500">
-              No print request found for token <b>{prevToken}</b>.
-            </div>
-          ) : (
-            <div>
-              <div className="mb-1">
-                <b>Token:</b>{" "}
-                <span className="text-blue-700 font-bold">{prevToken}</span>
-              </div>
-              <div className="mb-1">
-                <b>Status:</b>{" "}
-                <span className="capitalize">{prevStatus}</span>
-              </div>
-              {prevDetails && (
-                <>
-                  <div className="mb-1">
-                    <b>Pages:</b> {prevDetails.pageCount}
-                  </div>
-                  <div className="mb-1">
-                    <b>Color Type:</b> {prevDetails.colorType}
-                  </div>
-                  <div className="mb-1">
-                    <b>Side Type:</b> {prevDetails.sideType}
-                  </div>
-                  <div className="mb-1">
-                    <b>Uploaded:</b>{" "}
-                    {prevDetails.createdAt?.toDate?.().toLocaleString?.()}
-                  </div>
-                </>
-              )}
-              {prevStatus === "printed" && (
-                <div className="text-green-600 mt-2 font-bold">
-                  Your document is printed and ready for collection!
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      )}
+      <div className="flex flex-col items-center w-full">
+        {prevToken && (
+          <PrintTokenStatusCard details={prevDetails} status={prevStatus} token={prevToken} />
+        )}
+      </div>
     </div>
   );
 };

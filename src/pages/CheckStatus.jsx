@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { db } from "../firebase";
 import { collection, query, where, getDocs } from "firebase/firestore";
+import PrintTokenStatusCard from "../components/PrintTokenStatusCard";
 
 const CheckStatus = () => {
   const [token, setToken] = useState(localStorage.getItem("printToken") || "");
@@ -72,6 +73,7 @@ const CheckStatus = () => {
           )}
         </div>
       )}
+      <PrintTokenStatusCard details={details} status={status} token={token} />
     </div>
   );
 };

@@ -24,9 +24,8 @@ const TokenGenerator = ({ paymentSuccess }) => {
     <div>
       {token ? (
         <div>
-          <h2>Your Token Number:</h2>
           <p>{token}</p>
-          <p>Please use this token for document collection.</p>
+
         </div>
       ) : (
         <p>Processing payment...</p>
