@@ -10,8 +10,14 @@ import AdminDashboard from "./pages/AdminDashboard";
 import PrintQueue from "./pages/PrintQueue";
 import CheckStatus from "./pages/CheckStatus";
 import AdminPricePanel from "./pages/AdminPricePanel";
+import PrivacyPolicy from "./components/PrivacyPolicy";
+import TermsAndConditions from "./components/TermsAndConditions";
+import CancellationRefund from "./components/CancellationRefund";
+import ShippingDelivery from "./components/ShippingDelivery";
+import ContactUs from "./components/ContactUs";
 import { PriceProvider } from "./context/PriceContext";
 import { ShopStatusProvider } from "./context/ShopStatusContext";
+import Footer from "./components/Footer";
 
 function PrivateRoute({ children }) {
   const [user, setUser] = useState(undefined);
@@ -51,7 +57,13 @@ function App() {
                 <AdminPricePanel />
               </PrivateRoute>
             } />
+            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+            <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
+            <Route path="/cancellation-refund" element={<CancellationRefund />} />
+            <Route path="/shipping-delivery" element={<ShippingDelivery />} />
+            <Route path="/contact-us" element={<ContactUs />} />
           </Routes>
+          <Footer />
         </Router>
       </ShopStatusProvider>
     </PriceProvider>
