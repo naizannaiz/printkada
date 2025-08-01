@@ -12,6 +12,7 @@ const UploadPage = () => {
   const [file, setFile] = useState(null);
   const [colorType, setColorType] = useState("");
   const [sideType, setSideType] = useState("");
+  const [copies, setCopies] = useState(1);
   const [showWarning, setShowWarning] = useState(false);
   const [loading, setLoading] = useState(false);
   const [prevToken, setPrevToken] = useState(localStorage.getItem("printToken") || "");
@@ -103,13 +104,14 @@ const UploadPage = () => {
           colorType,
           sideType,
           pdfUrl,
+          copies, // Include copies here
           createdAt: Timestamp.now(),
           status: "pending",
         });
 
         sessionStorage.setItem("printRequestId", docRef.id);
         setLoading(false);
-        navigate("/payment", { state: { pageCount, colorType, sideType } });
+        navigate("/payment", { state: { pageCount, colorType, sideType, copies } }); // Pass copies to payment page
       } catch (error) {
         setLoading(false);
         setShowWarning(true);
@@ -178,8 +180,7 @@ const UploadPage = () => {
               viewBox="0 0 24 24"
             >
               <circle
-                className="opacity-25"
-                cx="12"
+                className
                 cy="12"
                 r="10"
                 stroke="currentColor"
@@ -266,6 +267,21 @@ const UploadPage = () => {
               Double Side
             </label>
           </div>
+        </div>
+
+        {/* Number of Copies */}
+        <div className="mt-6">
+          <label className="block text-gray-700 font-semibold mb-2">
+            Number of Copies:
+          </label>
+          <input
+            type="number"
+            min={1}
+            value={copies || 1}
+            onChange={e => setCopies(Math.max(1, parseInt(e.target.value) || 1))}
+            className="w-24 px-2 py-1 border rounded focus:outline-none focus:ring"
+            disabled={status === "closed"}
+          />
         </div>
 
         {pageCount > 0 && (

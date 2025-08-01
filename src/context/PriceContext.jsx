@@ -7,23 +7,35 @@ const PriceContext = createContext();
 
 // Provider component
 export function PriceProvider({ children }) {
-  const [pricePerPage, setPricePerPageState] = useState(1);
+  const [pricePerPageBlackwhite, setPricePerPageBlackwhite] = useState(1);
+  const [pricePerPageColor, setPricePerPageColor] = useState(5);
 
   useEffect(() => {
     const unsub = onSnapshot(doc(db, "settings", "main"), (docSnap) => {
       if (docSnap.exists()) {
-        setPricePerPageState(docSnap.data().pricePerPage || 1);
+        setPricePerPageBlackwhite(docSnap.data().pricePerPageBlackwhite || 1);
+        setPricePerPageColor(docSnap.data().pricePerPageColor || 5);
       }
     });
     return unsub;
   }, []);
 
-  const setPricePerPage = async (price) => {
-    await setDoc(doc(db, "settings", "main"), { pricePerPage: price }, { merge: true });
+  const setPrices = async (blackwhite, color) => {
+    await setDoc(
+      doc(db, "settings", "main"),
+      { pricePerPageBlackwhite: blackwhite, pricePerPageColor: color },
+      { merge: true }
+    );
   };
 
   return (
-    <PriceContext.Provider value={{ pricePerPage, setPricePerPage }}>
+    <PriceContext.Provider
+      value={{
+        pricePerPageBlackwhite,
+        pricePerPageColor,
+        setPrices,
+      }}
+    >
       {children}
     </PriceContext.Provider>
   );

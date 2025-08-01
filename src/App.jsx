@@ -9,6 +9,7 @@ import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
 import PrintQueue from "./pages/PrintQueue";
 import CheckStatus from "./pages/CheckStatus";
+import AdminPricePanel from "./pages/AdminPricePanel";
 import { PriceProvider } from "./context/PriceContext";
 import { ShopStatusProvider } from "./context/ShopStatusContext";
 
@@ -45,6 +46,11 @@ function App() {
               </PrivateRoute>
             } />
             <Route path="/check-status" element={<CheckStatus />} />
+            <Route path="/admin-price" element={
+              <PrivateRoute>
+                <AdminPricePanel />
+              </PrivateRoute>
+            } />
           </Routes>
         </Router>
       </ShopStatusProvider>

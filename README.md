@@ -1,47 +1,89 @@
 # College Printing Shop
 
-This project is a web application for a college printing shop that allows students to upload PDF documents, count the number of pages, process payments through a QR system like Razorpay, and generate a token number for collection.
+A web app for uploading documents, paying online, and tracking print status.
 
-## Features
+---
 
-- **File Upload**: Students can upload PDF documents for printing.
-- **Page Counting**: Automatically counts the number of pages in the uploaded PDF.
-- **Payment Processing**: Integrates with Razorpay to generate a QR code for payment based on the number of pages.
-- **Token Generation**: After successful payment, a unique token number is generated for document collection.
-- **Admin Dashboard**: Administrative interface for managing print jobs and payments.
+## 🚀 Getting Started
 
-## Getting Started
+### 1. Clone the repository
 
-To get started with this project, follow these steps:
+```bash
+git clone https://github.com/your-username/college-printing-shop.git
+cd college-printing-shop
+```
 
-1. **Set up your development environment** by installing Node.js and npm.
-2. **Create a new React application** using Create React App.
-3. **Create the directory structure** as outlined in the project tree.
-4. **Implement each component and page** according to the specified functionality.
-5. **Use libraries** like `pdf-lib` or `pdf.js` for PDF handling and `Razorpay` for payment processing.
-6. **Test each feature thoroughly** to ensure everything works as expected.
-7. **Document your code** and update this README.md with instructions on how to use the application.
-
-## Installation
+### 2. Install dependencies
 
 ```bash
 npm install
 ```
 
-## Usage
+### 3. Set up environment variables
 
-To run the application in development mode, use:
+- Copy `.env.example` to `.env`:
+
+```bash
+cp .env.example .env
+```
+
+- Fill in your Firebase credentials in `.env` (see below).
+
+### 4. Start the development server
 
 ```bash
 npm start
 ```
 
-Open [http://localhost:3000](http://localhost:3000) in your browser to view the application.
+The app will be available at [http://localhost:3000](http://localhost:3000).
 
-## Contributing
+---
 
-Contributions are welcome! Please feel free to submit a pull request or open an issue for any suggestions or improvements.
+## 🛠️ Environment Variables
 
-## License
+Create a `.env` file in the root directory with the following content:
 
-This project is licensed under the MIT License.
+```
+REACT_APP_FIREBASE_API_KEY=your_firebase_api_key
+REACT_APP_FIREBASE_AUTH_DOMAIN=your_firebase_auth_domain
+REACT_APP_FIREBASE_PROJECT_ID=your_firebase_project_id
+REACT_APP_FIREBASE_STORAGE_BUCKET=your_firebase_storage_bucket
+REACT_APP_FIREBASE_MESSAGING_SENDER_ID=your_firebase_messaging_sender_id
+REACT_APP_FIREBASE_APP_ID=your_firebase_app_id
+```
+
+> **Note:** You can find these values in your Firebase project settings.
+
+---
+
+## 📝 Features
+
+- Upload PDF files for printing
+- Select print type and side
+- Pay online via UPI QR code
+- Get a unique print token after payment
+- Check print status and token history for the last 2 days
+- Admin dashboard for managing print queue
+
+---
+
+## 📁 Project Structure
+
+- `src/pages/` — Main pages (Upload, Payment, Success, Check Status, Admin)
+- `src/components/` — Reusable UI components
+- `src/context/` — React context for global state
+- `src/firebase.js` — Firebase configuration
+
+---
+
+## ❓ Troubleshooting
+
+- If you see a blank page, check the browser console for errors.
+- Make sure your `.env` is set up and Firebase is enabled for Authentication, Firestore, and Storage.
+- If you have issues, try deleting `node_modules` and running `npm install` again.
+
+---
+
+## 📄 License
+
+MIT

@@ -90,6 +90,7 @@ const PrintQueue = () => {
             </span>
           </div>
           <div className="mb-2"><b>Uploaded:</b> {selected.createdAt?.toDate().toLocaleString()}</div>
+          <div className="mb-2"><b>Copies:</b> {selected.copies}</div>
           <div className="my-4">
             <a
               href={selected.pdfUrl}

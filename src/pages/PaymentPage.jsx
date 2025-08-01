@@ -13,14 +13,17 @@ const PaymentPage = () => {
   const [token, setToken] = useState("");
   const navigate = useNavigate();
   const location = useLocation();
-  const { pricePerPage } = usePrice();
+  const { pricePerPageBlackwhite, pricePerPageColor } = usePrice();
 
   // Get details from location.state or sessionStorage as fallback
   const pageCount = location.state?.pageCount || 1;
   const fileName = location.state?.fileName || "Document.pdf";
   const colorType = location.state?.colorType || "Blackwhite";
   const sideType = location.state?.sideType || "Single";
-  const total = pageCount * pricePerPage;
+  const copies = location.state?.copies || 1;
+  const pricePerPage =
+    colorType === "color" ? pricePerPageColor : pricePerPageBlackwhite;
+  const total = pageCount * pricePerPage * copies;
 
   const handlePaymentSuccess = async () => {
     const paymentId = generatePaymentId();
@@ -38,7 +41,8 @@ const PaymentPage = () => {
       await updateDoc(doc(db, "printRequests", printRequestId), {
         paymentId,
         token,
-        status: "paid"
+        status: "paid",
+        copies // <-- Add this line to update the number of copies in Firestore
       });
     } else {
       alert("No print request found. Please start from the upload page.");
@@ -82,6 +86,10 @@ const PaymentPage = () => {
             <div className="flex justify-between">
               <span className="text-gray-600">Print Side</span>
               <span className="font-medium capitalize">{sideType}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-600">Number of Copies</span>
+              <span className="font-medium">{copies}</span>
             </div>
             <div className="border-t pt-4 flex justify-between mt-4">
               <span className="font-bold">Total Amount</span>
