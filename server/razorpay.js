@@ -13,6 +13,12 @@ const razorpay = new Razorpay({
   key_secret: process.env.RAZORPAY_KEY_SECRET || "eyWqblYqillu1jnMCgIYuJU7"
 });
 
+// Add CORS configuration for production
+app.use(cors({
+  origin: process.env.FRONTEND_URL || "http://localhost:3000",
+  credentials: true
+}));
+
 // Step 1.1: Create Order API (Server-side)
 app.post("/api/razorpay/order", async (req, res) => {
   try {

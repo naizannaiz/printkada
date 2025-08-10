@@ -5,7 +5,11 @@
   "main": "razorpay.js",
   "scripts": {
     "start": "node razorpay.js",
-    "dev": "nodemon razorpay.js"
+    "dev": "nodemon razorpay.js",
+    "build": "echo 'No build step required'"
+  },
+  "engines": {
+    "node": ">=16.0.0"
   },
   "dependencies": {
     "express": "^4.18.2",

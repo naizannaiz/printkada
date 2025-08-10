@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { usePrice } from '../context/PriceContext';
+import { API_ENDPOINTS } from '../config/api';
 
 const RazorpayPayment = ({ 
   amount, 
@@ -32,7 +33,7 @@ const RazorpayPayment = ({
       setLoading(true);
       setError(null);
 
-      const response = await fetch('http://localhost:5000/api/razorpay/order', {
+      const response = await fetch(API_ENDPOINTS.CREATE_ORDER, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -72,7 +73,7 @@ const RazorpayPayment = ({
   // Step 1.5: Verify Payment Signature (Mandatory step)
   const verifyPayment = async (razorpay_order_id, razorpay_payment_id, razorpay_signature) => {
     try {
-      const response = await fetch('http://localhost:5000/api/razorpay/verify', {
+      const response = await fetch(API_ENDPOINTS.VERIFY_PAYMENT, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -129,7 +130,7 @@ const RazorpayPayment = ({
 
             if (verificationResult.success) {
               // Step 1.6: Verify Payment Status (Optional)
-              const paymentStatusResponse = await fetch(`http://localhost:5000/api/razorpay/payment/${response.razorpay_payment_id}`);
+              const paymentStatusResponse = await fetch(`${API_ENDPOINTS.PAYMENT_STATUS}/${response.razorpay_payment_id}`);
               const paymentStatus = await paymentStatusResponse.json();
               
               console.log('Payment status:', paymentStatus.payment.status);
