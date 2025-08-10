@@ -4,13 +4,15 @@ import { usePrice } from "../context/PriceContext";
 import { getStorage } from "firebase/storage";
 import app, { db } from "../firebase";
 import { doc, updateDoc } from "firebase/firestore";
-import PaymentQR from "../components/PaymentQR"; // <-- Import the PaymentQR component
+import RazorpayPayment from "../components/RazorpayPayment";
 
 export const storage = getStorage(app);
 
 const PaymentPage = () => {
   const [paymentSuccess, setPaymentSuccess] = useState(false);
   const [token, setToken] = useState("");
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const { pricePerPageBlackwhite, pricePerPageColor } = usePrice();
@@ -25,33 +27,58 @@ const PaymentPage = () => {
     colorType === "color" ? pricePerPageColor : pricePerPageBlackwhite;
   const total = pageCount * pricePerPage * copies;
 
-  const handlePaymentSuccess = async () => {
-    const paymentId = generatePaymentId();
-    const token = generateToken();
+  const handlePaymentSuccess = async (paymentData = null) => {
+    try {
+      setIsProcessingPayment(true);
+      
+      const paymentId = paymentData?.paymentId || generatePaymentId();
+      const token = generateToken();
 
-    sessionStorage.setItem("printToken", token);
-    localStorage.setItem("printToken", token);
+      sessionStorage.setItem("printToken", token);
+      localStorage.setItem("printToken", token);
 
-    const tokens = JSON.parse(localStorage.getItem("printTokens") || "[]");
-    tokens.push({ token, createdAt: Date.now() });
-    localStorage.setItem("printTokens", JSON.stringify(tokens));
+      const tokens = JSON.parse(localStorage.getItem("printTokens") || "[]");
+      tokens.push({ token, createdAt: Date.now() });
+      localStorage.setItem("printTokens", JSON.stringify(tokens));
 
-    const printRequestId = sessionStorage.getItem("printRequestId");
-    if (printRequestId) {
-      await updateDoc(doc(db, "printRequests", printRequestId), {
-        paymentId,
-        token,
-        status: "paid",
-        copies // <-- Add this line to update the number of copies in Firestore
-      });
-    } else {
-      alert("No print request found. Please start from the upload page.");
-      return;
+      const printRequestId = sessionStorage.getItem("printRequestId");
+      if (printRequestId) {
+        await updateDoc(doc(db, "printRequests", printRequestId), {
+          paymentId,
+          token,
+          status: "paid",
+          copies,
+          paymentMethod: "razorpay",
+          razorpayOrderId: paymentData?.orderId,
+          razorpayPaymentId: paymentData?.paymentId,
+          paymentAmount: total
+        });
+      } else {
+        alert("No print request found. Please start from the upload page.");
+        setIsProcessingPayment(false);
+        return;
+      }
+
+      setPaymentSuccess(true);
+      setToken(token);
+      setShowPaymentModal(false);
+      
+      // Add a small delay to show the loading screen
+      setTimeout(() => {
+        navigate('/success');
+      }, 2000);
+      
+    } catch (error) {
+      console.error("Error processing payment:", error);
+      alert("Error processing payment. Please try again.");
+      setIsProcessingPayment(false);
     }
+  };
 
-    setPaymentSuccess(true);
-    setToken(token);
-    navigate('/success');
+  const handlePaymentFailure = (error) => {
+    console.error("Payment failed:", error);
+    alert(`Payment failed: ${error}`);
+    setShowPaymentModal(false);
   };
 
   const generatePaymentId = () => "PAY" + Math.floor(100000 + Math.random() * 900000);
@@ -62,11 +89,46 @@ const PaymentPage = () => {
     return `${letter}${digits}`;
   };
 
+  const orderDetails = {
+    fileName,
+    pageCount,
+    colorType,
+    sideType,
+    copies,
+    total
+  };
+
+  // Loading Screen Component
+  const LoadingScreen = () => (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-2xl p-8 max-w-md w-full mx-4 text-center">
+        <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto mb-4"></div>
+        <h2 className="text-xl font-bold text-gray-900 mb-2">Processing Payment</h2>
+        <p className="text-gray-600 mb-4">Please wait while we process your payment and generate your print token...</p>
+        <div className="space-y-2">
+          <div className="flex items-center justify-center space-x-2">
+            <div className="w-2 h-2 bg-blue-600 rounded-full animate-pulse"></div>
+            <span className="text-sm text-gray-500">Verifying payment</span>
+          </div>
+          <div className="flex items-center justify-center space-x-2">
+            <div className="w-2 h-2 bg-green-600 rounded-full animate-pulse"></div>
+            <span className="text-sm text-gray-500">Updating database</span>
+          </div>
+          <div className="flex items-center justify-center space-x-2">
+            <div className="w-2 h-2 bg-purple-600 rounded-full animate-pulse"></div>
+            <span className="text-sm text-gray-500">Generating token</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 py-12">
       <h1 className="text-3xl font-extrabold text-gray-900 mb-2 text-center">Complete Your Payment</h1>
       <p className="text-gray-500 mb-8 text-center">Review your print job and proceed with payment</p>
-      <div className="flex flex-col md:flex-row gap-8 w-full max-w-3xl">
+      
+      <div className="flex flex-col md:flex-row gap-8 w-full max-w-4xl">
         {/* Order Summary Card */}
         <div className="bg-white rounded-2xl shadow p-6 flex-1 min-w-[320px]">
           <h2 className="font-bold text-lg mb-4">Order Summary</h2>
@@ -97,32 +159,58 @@ const PaymentPage = () => {
             </div>
           </div>
         </div>
-        {/* Payment Options Card */}
-        <div className="bg-white rounded-2xl shadow p-6 flex-1 min-w-[320px] flex flex-col items-center">
-          <h2 className="font-semibold text-base mb-2">Payment Options</h2>
-          <div className="w-full border rounded-xl p-4 flex flex-col items-center mb-2">
-            <svg className="h-7 w-7 text-gray-700 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <rect x="3" y="3" width="7" height="7" rx="1.5" stroke="currentColor" strokeWidth="2"/>
-              <rect x="14" y="3" width="7" height="7" rx="1.5" stroke="currentColor" strokeWidth="2"/>
-              <rect x="14" y="14" width="7" height="7" rx="1.5" stroke="currentColor" strokeWidth="2"/>
-              <rect x="3" y="14" width="7" height="7" rx="1.5" stroke="currentColor" strokeWidth="2"/>
-            </svg>
-            <span className="font-medium mb-2">Pay via UPI</span>
-            <PaymentQR pageCount={pageCount} onPaymentSuccess={handlePaymentSuccess} />
-            <span className="text-gray-400 text-xs mt-2 text-center">
-              Scan QR code using any UPI app
-            </span>
-          </div>
-          {!paymentSuccess && (
+
+        {/* Razorpay Payment Card */}
+        <div className="bg-white rounded-2xl shadow p-6 flex-1 min-w-[320px]">
+          <h2 className="font-semibold text-base mb-4">Secure Payment</h2>
+          
+          <div className="space-y-4">
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <div className="flex items-center mb-2">
+                <img 
+                  src="https://razorpay.com/favicon.png" 
+                  alt="Razorpay" 
+                  className="w-6 h-6 mr-2"
+                />
+                <span className="text-blue-800 font-medium">Razorpay Payment Gateway</span>
+              </div>
+              <p className="text-blue-700 text-sm">
+                Pay securely using cards, UPI, net banking, and more payment options.
+              </p>
+            </div>
+            
             <button
-              onClick={handlePaymentSuccess}
-              className="mt-4 w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-lg text-base transition"
+              onClick={() => setShowPaymentModal(true)}
+              disabled={isProcessingPayment}
+              className={`w-full py-3 px-4 rounded-lg font-bold text-white transition ${
+                isProcessingPayment 
+                  ? 'bg-gray-400 cursor-not-allowed' 
+                  : 'bg-blue-600 hover:bg-blue-700'
+              }`}
             >
-              I have paid
+              {isProcessingPayment ? 'Processing...' : `Pay ₹${total.toFixed(2)} with Razorpay`}
             </button>
-          )}
+          </div>
         </div>
       </div>
+
+      {/* Razorpay Payment Modal */}
+      {showPaymentModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl max-w-md w-full">
+            <RazorpayPayment
+              amount={total}
+              orderDetails={orderDetails}
+              onPaymentSuccess={handlePaymentSuccess}
+              onPaymentFailure={handlePaymentFailure}
+              onClose={() => setShowPaymentModal(false)}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Loading Screen */}
+      {isProcessingPayment && <LoadingScreen />}
     </div>
   );
 };

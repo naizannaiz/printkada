@@ -1,0 +1,27 @@
+{
+  "name": "college-printing-shop-server",
+  "version": "1.0.0",
+  "description": "Backend server for college printing shop with Razorpay integration",
+  "main": "razorpay.js",
+  "scripts": {
+    "start": "node razorpay.js",
+    "dev": "nodemon razorpay.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "razorpay": "^2.8.6",
+    "cors": "^2.8.5"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  },
+  "keywords": [
+    "razorpay",
+    "payment",
+    "express",
+    "college",
+    "printing"
+  ],
+  "author": "Your Name",
+  "license": "MIT"
+} 

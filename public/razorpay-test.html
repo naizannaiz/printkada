@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Razorpay Integration Test - College Printing Shop</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .payment-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        .btn {
+            background: #3B82F6;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        .btn:hover {
+            background: #2563EB;
+        }
+        .btn:disabled {
+            background: #9CA3AF;
+            cursor: not-allowed;
+        }
+        .result {
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 6px;
+        }
+        .success {
+            background: #D1FAE5;
+            border: 1px solid #10B981;
+            color: #065F46;
+        }
+        .error {
+            background: #FEE2E2;
+            border: 1px solid #EF4444;
+            color: #991B1B;
+        }
+        .info {
+            background: #DBEAFE;
+            border: 1px solid #3B82F6;
+            color: #1E40AF;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Razorpay Integration Test</h1>
+        <p>This page demonstrates the Razorpay integration following their official documentation.</p>
+
+        <div class="payment-section">
+            <h2>Step 1: Create Order (Server-side)</h2>
+            <p>Amount: ₹50.00</p>
+            <button class="btn" onclick="createOrder()">Create Order</button>
+            <div id="orderResult"></div>
+        </div>
+
+        <div class="payment-section">
+            <h2>Step 2: Pay with Razorpay</h2>
+            <p>Click the button below to open Razorpay checkout:</p>
+            <button class="btn" id="rzp-button1" onclick="openRazorpay()">Pay ₹50.00</button>
+            <div id="paymentResult"></div>
+        </div>
+
+        <div class="payment-section">
+            <h2>Step 3: Payment Verification</h2>
+            <div id="verificationResult"></div>
+        </div>
+    </div>
+
+    <!-- Step 1.2: Load Razorpay Script -->
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    
+    <script>
+        let currentOrder = null;
+
+        // Step 1.1: Create Order (Server-side)
+        async function createOrder() {
+            try {
+                document.getElementById('orderResult').innerHTML = '<div class="info">Creating order...</div>';
+                
+                const response = await fetch('http://localhost:5000/api/razorpay/order', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        amount: 50,
+                        currency: 'INR',
+                        receipt: `receipt_${Date.now()}`,
+                        notes: {
+                            test: 'true',
+                            description: 'Test payment for college printing shop'
+                        }
+                    }),
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    currentOrder = data.order;
+                    document.getElementById('orderResult').innerHTML = 
+                        `<div class="success">
+                            <strong>Order Created Successfully!</strong><br>
+                            Order ID: ${data.order.id}<br>
+                            Amount: ₹${(data.order.amount / 100).toFixed(2)}<br>
+                            Status: ${data.order.status}
+                        </div>`;
+                } else {
+                    throw new Error(data.error);
+                }
+            } catch (error) {
+                document.getElementById('orderResult').innerHTML = 
+                    `<div class="error">Error creating order: ${error.message}</div>`;
+            }
+        }
+
+        // Step 1.2: Integrate with Checkout (Client-side)
+        function openRazorpay() {
+            if (!currentOrder) {
+                alert('Please create an order first!');
+                return;
+            }
+
+            // Configure Razorpay options as per documentation
+            var options = {
+                "key": "rzp_live_Kf2dTChwe7YKPR", // Replace with your actual Key ID
+                "amount": currentOrder.amount, // Amount in paise
+                "currency": currentOrder.currency,
+                "name": "College Printing Shop",
+                "description": "Test Transaction",
+                "image": "https://razorpay.com/favicon.png",
+                "order_id": currentOrder.id, // Order ID from Step 1.1
+                "prefill": {
+                    "name": "Test Student",
+                    "email": "student@college.edu",
+                    "contact": "+919876543210"
+                },
+                "notes": {
+                    "address": "College Campus",
+                    "test": "true"
+                },
+                "theme": {
+                    "color": "#3B82F6"
+                },
+                "modal": {
+                    "ondismiss": function() {
+                        console.log('Payment modal dismissed');
+                    }
+                }
+            };
+
+            var rzp1 = new Razorpay(options);
+
+            // Step 1.3: Handle Payment Success and Failure
+            rzp1.on('payment.failed', function (response) {
+                console.error('Payment failed:', response.error);
+                document.getElementById('paymentResult').innerHTML = 
+                    `<div class="error">Payment failed: ${response.error.description}</div>`;
+            });
+
+            rzp1.open();
+        }
+
+        // Step 1.4: Store Fields in Your Server (Success callback)
+        // This function will be called by Razorpay after successful payment
+        window.handleRazorpaySuccess = async function(response) {
+            console.log('Payment success response:', response);
+            
+            document.getElementById('paymentResult').innerHTML = 
+                `<div class="success">
+                    <strong>Payment Successful!</strong><br>
+                    Payment ID: ${response.razorpay_payment_id}<br>
+                    Order ID: ${response.razorpay_order_id}<br>
+                    Signature: ${response.razorpay_signature.substring(0, 20)}...
+                </div>`;
+
+            // Step 1.5: Verify Payment Signature
+            await verifyPayment(response);
+        };
+
+        // Step 1.5: Verify Payment Signature (Mandatory step)
+        async function verifyPayment(response) {
+            try {
+                document.getElementById('verificationResult').innerHTML = 
+                    '<div class="info">Verifying payment signature...</div>';
+
+                const verifyResponse = await fetch('http://localhost:5000/api/razorpay/verify', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        razorpay_order_id: response.razorpay_order_id,
+                        razorpay_payment_id: response.razorpay_payment_id,
+                        razorpay_signature: response.razorpay_signature,
+                    }),
+                });
+
+                const verifyData = await verifyResponse.json();
+
+                if (verifyData.success) {
+                    document.getElementById('verificationResult').innerHTML = 
+                        `<div class="success">
+                            <strong>Payment Verified Successfully!</strong><br>
+                            Payment ID: ${verifyData.payment_id}<br>
+                            Order ID: ${verifyData.order_id}<br>
+                            Message: ${verifyData.message}
+                        </div>`;
+                } else {
+                    throw new Error(verifyData.error);
+                }
+            } catch (error) {
+                document.getElementById('verificationResult').innerHTML = 
+                    `<div class="error">Payment verification failed: ${error.message}</div>`;
+            }
+        }
+
+        // Auto-create order when page loads
+        window.onload = function() {
+            createOrder();
+        };
+    </script>
+</body>
+</html> 
