@@ -211,7 +211,11 @@ const PaymentPage = () => {
 
       {/* Loading Screen */}
       {isProcessingPayment && <LoadingScreen />}
-    </div>
+    # Remove the file from your latest commit and stage the removal
+    git rm --cached server/serviceAccountKey.json
+    
+    # Commit the change
+    git commit -m "Remove serviceAccountKey.json from repo"    </div>
   );
 };
 
