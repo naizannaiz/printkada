@@ -3,11 +3,19 @@ const express = require('express');
 const cors = require('cors');
 
 // Initialize Firebase Admin SDK
-const serviceAccount = require('./serviceAccountKey.json');
+let serviceAccount;
+try {
+  serviceAccount = require('./serviceAccountKey.json');
+} catch (error) {
+  console.error('❌ Error: serviceAccountKey.json not found or invalid!');
+  console.error('Please ensure you have downloaded your Firebase service account key and saved it as serviceAccountKey.json');
+  console.error('See CLEANUP_SETUP.md for detailed instructions');
+  process.exit(1);
+}
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
-  storageBucket: "printshop-10.firebasestorage.app"
+  storageBucket: process.env.FIREBASE_STORAGE_BUCKET || "printshop-10.firebasestorage.app"
 });
 
 const db = admin.firestore();

@@ -32,7 +32,8 @@ This guide will help you set up an automatic cleanup system that deletes print r
 4. **Download and Configure**
    - Click "Generate key" button
    - Download the JSON file
-   - Replace the content in `server/serviceAccountKey.json` with your actual service account key
+   - **Copy the downloaded file to `server/serviceAccountKey.json`**
+   - **⚠️ IMPORTANT: This file is now protected by .gitignore and will NOT be committed to GitHub**
 
 ## 🔧 Step 2: Install Dependencies
 
@@ -47,10 +48,21 @@ npm install
 
 Create a `.env` file in the server directory:
 
+```bash
+# Copy the example file
+cp server/env.example server/.env
+```
+
+Then edit `server/.env` with your actual values:
+
 ```env
 # Firebase Configuration
 FIREBASE_PROJECT_ID=printshop-10
 FIREBASE_STORAGE_BUCKET=printshop-10.firebasestorage.app
+
+# Razorpay Configuration
+RAZORPAY_KEY_ID=rzp_test_your_actual_key_id
+RAZORPAY_KEY_SECRET=your_actual_razorpay_secret
 
 # Cleanup Configuration
 CLEANUP_INTERVAL_HOURS=6
@@ -58,7 +70,13 @@ CLEANUP_RETENTION_HOURS=24
 
 # Server Configuration
 PORT=5001
+NODE_ENV=development
+
+# Frontend URL (for CORS)
+FRONTEND_URL=http://localhost:3000
 ```
+
+**⚠️ IMPORTANT: The `.env` file is protected by .gitignore and will NOT be committed to GitHub**
 
 ## 🚀 Step 4: Start the Cleanup Service
 
@@ -185,12 +203,34 @@ const oneDayAgo = new Date();
 oneDayAgo.setHours(oneDayAgo.getHours() - 48);
 ```
 
+## 🔒 Security & Privacy
+
+### Protected Files
+The following files are protected by `.gitignore` and will **NOT** be committed to GitHub:
+
+- `server/serviceAccountKey.json` - Firebase service account credentials
+- `server/.env` - Environment variables and secrets
+- `server/credentials/` - Any additional credential files
+- `server/secrets/` - Secret files directory
+
+### Template Files
+The following template files are included for reference:
+- `server/serviceAccountKey.example.json` - Shows the structure of Firebase credentials
+- `server/env.example` - Shows required environment variables
+
+### Best Practices
+1. **Never commit credentials**: All sensitive files are protected by `.gitignore`
+2. **Use environment variables**: Store secrets in `.env` files
+3. **Rotate keys regularly**: Update your Firebase and Razorpay keys periodically
+4. **Monitor access**: Regularly check who has access to your credentials
+
 ## 🚨 Important Notes
 
 1. **Backup First**: Test the cleanup system in development before deploying to production
 2. **Monitor Initially**: Watch the logs for the first few days to ensure proper operation
 3. **Service Account Security**: Keep your service account key secure and never commit it to version control
 4. **Storage Costs**: This will help reduce Firebase Storage costs by removing old files
+5. **Credential Protection**: All sensitive files are now protected from accidental commits
 
 ## 🐛 Troubleshooting
 
