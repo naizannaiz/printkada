@@ -16,7 +16,8 @@ const razorpay = new Razorpay({
 const allowedOrigins = [
   process.env.FRONTEND_URL,
   "http://localhost:3000",
-  "https://printshop-4jfe1oj95-naizans-projects.vercel.app"
+  "https://printshop-4jfe1oj95-naizans-projects.vercel.app",
+  "https://printshop-phi.vercel.app"
 ].filter(Boolean); // Remove any undefined values
 
 app.use(cors({

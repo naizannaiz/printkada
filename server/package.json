@@ -6,6 +6,9 @@
   "scripts": {
     "start": "node razorpay.js",
     "dev": "nodemon razorpay.js",
+    "cleanup": "node cleanup.js",
+    "cleanup:dev": "nodemon cleanup.js",
+    "cleanup:setup": "node start-cleanup.js",
     "build": "echo 'No build step required'"
   },
   "engines": {
@@ -14,7 +17,8 @@
   "dependencies": {
     "express": "^4.18.2",
     "razorpay": "^2.8.6",
-    "cors": "^2.8.5"
+    "cors": "^2.8.5",
+    "firebase-admin": "^12.0.0"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"

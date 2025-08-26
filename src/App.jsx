@@ -10,6 +10,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import PrintQueue from "./pages/PrintQueue";
 import CheckStatus from "./pages/CheckStatus";
 import AdminPricePanel from "./pages/AdminPricePanel";
+import AdminCleanup from "./pages/AdminCleanup";
 import PrivacyPolicy from "./components/PrivacyPolicy";
 import TermsAndConditions from "./components/TermsAndConditions";
 import CancellationRefund from "./components/CancellationRefund";
@@ -55,6 +56,11 @@ function App() {
             <Route path="/admin-price" element={
               <PrivateRoute>
                 <AdminPricePanel />
+              </PrivateRoute>
+            } />
+            <Route path="/admin-cleanup" element={
+              <PrivateRoute>
+                <AdminCleanup />
               </PrivateRoute>
             } />
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />

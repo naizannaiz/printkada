@@ -23,13 +23,22 @@ const AdminDashboard = () => {
           <AdminPricePanel />
         </div>
 
-        {/* Go to Print Queue Button */}
-        <button
-          onClick={() => navigate("/print-queue")}
-          className="w-full px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition font-semibold"
-        >
-          Go to Print Queue
-        </button>
+        {/* Navigation Buttons */}
+        <div className="w-full space-y-3">
+          <button
+            onClick={() => navigate("/print-queue")}
+            className="w-full px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition font-semibold"
+          >
+            Go to Print Queue
+          </button>
+          
+          <button
+            onClick={() => navigate("/admin-cleanup")}
+            className="w-full px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition font-semibold"
+          >
+            Cleanup Management
+          </button>
+        </div>
       </div>
     </div>
   );
