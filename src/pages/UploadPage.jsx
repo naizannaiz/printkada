@@ -6,6 +6,8 @@ import { storage, db } from "../firebase";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { collection, addDoc, Timestamp, query, where, getDocs } from "firebase/firestore";
 import PrintTokenStatusCard from "../components/PrintTokenStatusCard";
+import { getAuth } from "firebase/auth";
+import { getStorage } from "firebase/storage";
 
 const UploadPage = () => {
   const [pageCount, setPageCount] = useState(0);
@@ -86,6 +88,19 @@ const UploadPage = () => {
     setPageCount(count);
     setFile(selectedFile);
     if (!isLoading) setLoading(false);
+  };
+
+  const handleFileUpload = async (file, fileName) => {
+    const auth = getAuth();
+    const storage = getStorage();
+
+    if (auth.currentUser) {
+      const storageRef = ref(storage, 'pdfs/' + fileName);
+      await uploadBytes(storageRef, file);
+      // Success: file uploaded
+    } else {
+      // Prompt user to sign in
+    }
   };
 
   const handleProceedToPayment = async () => {

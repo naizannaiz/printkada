@@ -1,5 +1,5 @@
 # .gitignore
-server/serviceAccountKey.json
+.env
 # Dependencies
 node_modules/
 npm-debug.log*
