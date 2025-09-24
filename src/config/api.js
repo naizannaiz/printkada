@@ -4,7 +4,7 @@ const API_CONFIG = {
     baseURL: 'http://localhost:5000',
   },
   production: {
-    baseURL: 'https://printkada-production.up.railway.app', // Use Railway server
+  baseURL: 'https://pri-production.up.railway.app/', // Use Railway server
   }
 };
 

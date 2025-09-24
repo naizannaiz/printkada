@@ -8,7 +8,7 @@ const AdminCleanup = () => {
   const [error, setError] = useState(null);
 
   const CLEANUP_SERVICE_URL = process.env.NODE_ENV === 'production' 
-    ? 'https://printkada-production.up.railway.app' 
+  ? 'https://pri-production.up.railway.app/' 
     : 'http://localhost:5001';
 
   const fetchStats = async () => {
